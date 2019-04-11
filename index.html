@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>On Julia’s efficient algorithm for subtyping union types and covariant tuples (Artifact)</title>
+	<script src="web-impl/_build/subtyping-artifact.js"></script>
+	<script src="web-impl/js/jquery-3.3.1.min.js"></script>
+	<script src="web-impl/js/d3.min.js"></script>
+	<link rel="stylesheet" href="web-impl/css/bootstrap.min.css"/>
+</head>
+<body>
+<div class="container" style="">
+<div class="alert alert-primary" role="alert" style="text-align: center">
+  <h2><a href="subtyping-artifact.zip">Download the archive</a>
+   	  <hr>
+   	  <a href="main.pdf">View the paper (inc. in archive)</a></h2>
+</div>
+	<div class="row">
+	<div class="col-sm">
+	<h1>On Julia’s efficient algorithm for subtyping union types and covariant tuples (Artifact)</h1>
+	<h2>Introduction</h2>
+	<p>This is the artifact for the pearl paper "On Julia’s efficient algorithm for subtyping union types and covariant tuples." It consists of two primary components:
+
+	<ul>
+	<li>This file: An implementation of the subtyping algorithm running in a webpage. This implementation is modified only slightly from the one described in the paper to enable visualization. For sources, see the <code>web-impl</code> directory. </li>
+	<li><code>proof/julia-iterators.v</code>: The Coq source code for the proofs referenced in our paper.</li>
+	</ul></p>
+
+	<h2>Proof</h2>
+<p>The proof script (found in <code>proof/julia-iterators.v</code>) depends on Coq 8.9.0. A detailed description of our 
+proof can be found in section 3 of the (included) paper. 
+The proof is standalone, and has no library dependencies. </p>
+
+<p>It relies on the standard library provided axiom 
+<a href="https://coq.inria.fr/stdlib/Coq.Logic.EqdepFacts.html#Eq_rect_eq_on">Eqdep.Eq_rect_eq.eq_rect_eq</a>, which establishes the invariance
+under substitution of dependent equality. In our formalization, structural type
+iterators are dependent upon the type over which they iterate. We rely on this
+axiom to decide when two iterators are iterating over the same or different types.
+It is an axiom in our system as it is independent of the calculus of constructions.
+</p>
+
+
+	<h2>Implementation</h2>
+	<p>This is a web implementation of our subtyping algorithm; it provides the ability to 
+	enter types to check their relationship and to examine the execution of the algorithm. To test 
+	two types' relation, enter them into the left-hand-side and right-hand-side inputs and click submit.
+	Note that fields are validated; check to make sure that types parsed and were valid against the type
+	language if the submit button won't work. The subtyping symbol will then change to indicate whether the
+	relation holds or not and an execution trace will be produced.</p>
+	<p>Examples from our paper - as well as some we've came up with while developing this
+	application - are provided below. To use an example, click it to load it into the inputs
+	and then click submit.</p>
+	<p>A trace of algorithm execution will be produced when a query is entered. The algorithm will explore every
+	configuration of choice for the type on the left-hand-side (shown in the leftmost column) to ensure that there
+	is some choice of union option on the right-hand-side (shown in the second to left column) such that basic subtyping
+	holds. To aid in understanding, a graphic illustration of the types and the choices made through them will also be produced.
+	The algorithm aims to demonstrate that for every choice there exists some choice on the right such that subtyping holds.</p>
+	<p>
+		The grammar of types is t ::= Atom(number) | Tuple1(t) | Tuple2(t1,t2) | Union(t1,t2). Input errors will either be parser errors (invalid identifier, mismatched parenthesis), or invalid type errors (for example, a Tuple2 with only one element).
+	</p>
+	</div>
+	</div>
+	<div class="row">
+		<div class="col-sm">
+			Subtypes:
+			<ul>
+				<li><a href="#" class="example">Atom(0) <: Atom(0)</a></li>
+				<li><a href="#" class="example">Tuple1(Union(Atom(0), Atom(1))) <: Union(Tuple1(Atom(0)), Tuple1(Atom(1)))</a></li>
+				<li><a href="#" class="example">Union(Tuple1(Atom(0)), Tuple1(Atom(1))) <: Tuple1(Union(Atom(0), Atom(1)))</a></li>
+				<li><a href="#" class="example">Tuple2(Union(Atom(0),Atom(1)),Union(Atom(2),Atom(3))) <: Tuple2(Union(Atom(1),Atom(0)),Union(Atom(3),Atom(2)))</a></li>
+			</ul>
+		</div>
+		<div class="col-sm">
+			Non-subtypes:
+			<ul>
+				<li><a href="#" class="example">Atom(0) <: Atom(1)</a></li>
+				<li><a href="#" class="example">Union(Atom(2), Atom(0)) <: Atom(2)</a></li> 
+				<li><a href="#" class="example">Atom(0) <: Tuple2(Union(Atom(0), Atom(1)), Union(Atom(0), Atom(1)))</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm" style="padding-right: 0">
+			  <input type="text" 
+			  	class="form-control type-entry" placeholder="Left-hand-side"
+			  	id="lhs" aria-label="lhs">
+			  <div class="invalid-feedback"></div>
+		</div>
+		<div class="col-md-auto" 
+			style="width: 40px; margin-left: -1px; 
+				padding-right: 0; padding-left: 0;
+					text-align: center">
+					<h3 id="is-subtype">⩻:</h3> 
+		</div>
+		<div class="col-sm" style="padding-left: 0">
+			  <input type="text" 
+			  	class="form-control type-entry" placeholder="Right-hand-side"
+			  			id="rhs" aria-label="rhs">
+			  <div class="invalid-feedback"></div></div>
+		<div class="col-md-auto">
+			<button type="submit" class="btn btn-primary" id="check-sub" disabled>
+				Submit</button></div>
+	</div>
+	<div class="row">
+	<div class="col-sm">
+		<table class="table table-bordered" id="results" hidden>
+			<thead>
+			    <tr>
+			      <th scope="col">Forall</th>
+			      <th scope="col">Exists</th>
+			      <th scope="col">Forall Type</th>
+			      <th scope="col">Exists Type</th>
+			    </tr>
+			</thead>
+			<!-- template:
+			<tr class="generated">
+				<td class="table-danger">Left, Right</td>
+				<td class="table-success">Left, Right</td>
+			</tr>
+			-->
+		</table>
+	</div>
+	</div>
+	<div class="row">
+	<div class="col-sm">
+
+	<p>
+
+<h4>Compiling the Implementation</h4>
+<p>
+The implementation is written in OCaml and compiled using js_of_ocaml. It requires:
+<ul>
+<li> OCaml 4.07.0 or later</li>
+<li> opam 2.0.4 or later</li>
+</ul>
+
+To compile the OCaml to Javascript, run
+
+<pre>
+make deps
+make
+</pre>
+
+in the <code>web-impl</code> subdirectory, which should update the file <code>web-impl/_build/subtype.js</code>.
+	</p>
+	</div>
+	</div>
+</div>
+<script>
+function validateTypeEntry(element) {
+	set_subtype_indicator(0)
+	var try_parse = subtyper.try(element.value)
+	var el = $(element)
+	if (try_parse[1]) {
+		// success
+		el.removeClass("is-invalid")
+		el.addClass("is-valid")
+		el.next(".invalid-feedback")[0].innerHTML = ""
+		if ($("input.is-valid.type-entry").length == 2) {
+			$("#check-sub")[0].disabled = false
+		}
+	} else {
+		// display error
+		el.addClass("is-invalid")
+		el.removeClass("is-valid")
+		el.next(".invalid-feedback")[0].innerHTML = try_parse[2]
+		$("#check-sub")[0].disabled = true
+	}
+}
+
+function tryExample(example) {
+	var types = example.target.innerHTML.split("&lt;:").map(x=>x.trim())
+	var lhs = $("#lhs")
+	var rhs = $("#rhs")
+	lhs[0].value = types[0]
+	rhs[0].value = types[1]
+	validateTypeEntry(lhs[0])
+	validateTypeEntry(rhs[0])
+	event.preventDefault()
+}
+
+function render_choice_list(list) {
+	if (list.length == 0) { return "[empty]" }
+	return list.map(x => x ? "R" : "L").join("")
+}
+
+function make_cell(success, contents) {
+	var class_of = success ? "table-success" : "table-danger";
+	return $("<td class=\"" + class_of + "\">" + contents + "</td>")[0]
+}
+
+function make_row(left, right, extra) {
+	var outp = $("<tr class=\"result\"></tr>")
+	outp.append(left)
+	outp.append(right)
+	if (extra != undefined) {
+		outp.append(extra)
+	}
+	return outp[0]
+}
+
+function make_graphic_cell(chl, ast, good) {
+	var cll = make_cell(good, "")
+	render_type_tree(cll, ast, chl)
+	return cll
+}
+
+function render_success_case(evidence, lhs_ast, rhs_ast) {
+	var fa_cell = a => make_cell(true, render_choice_list(evidence.fa))
+	var fa_graphic_cell = good => make_graphic_cell(evidence.fa, lhs_ast, good)
+
+	var failing_attempts = evidence.bdex.map(ex => make_cell(false, render_choice_list(ex))).reverse()
+	var passing_attempt = make_cell(true, render_choice_list(evidence.gdex))
+
+	var faex_graphics = evidence.bdex.map(ex => make_graphic_cell(ex, rhs_ast, false)).reverse()
+	var suex_graphic = make_graphic_cell(evidence.gdex, rhs_ast, true)
+
+	var rhs_cells = [];
+	rhs_cells = rhs_cells.concat(failing_attempts)
+	rhs_cells.push(passing_attempt)
+
+	var ex_graphic_cells = [];
+	ex_graphic_cells = ex_graphic_cells.concat(faex_graphics)
+	ex_graphic_cells.push(suex_graphic)
+	var outp_table = $("#results")[0]
+	for (var i = 0; i < rhs_cells.length; i++) {
+		outp_table.append(
+			make_row(fa_cell(), rhs_cells[i], 
+				[fa_graphic_cell(i == rhs_cells.length-1), ex_graphic_cells[i]]))
+	}
+	outp_table.hidden = false
+}
+
+function render_failure_case(evidence, lhs_ast, rhs_ast) {
+	var fa_cell = a => make_cell(false, render_choice_list(evidence.fa))
+	var fls_cells = 
+		evidence.fl.map(render_choice_list).reverse().map(c => make_cell(false, c))
+
+	var fa_cell_graphic = a => make_graphic_cell(evidence.fa, lhs_ast, false)
+	var ex_cell_graphics = evidence.fl.map(e => make_graphic_cell(e, rhs_ast, false)).reverse()
+
+	var outp_table = $("#results")[0]
+	for (var i = 0; i < fls_cells.length; i++) {
+		outp_table.append(make_row(fa_cell(), fls_cells[i],
+			[fa_cell_graphic(), ex_cell_graphics[i]]))
+	}
+	outp_table.hidden = false
+}
+
+function set_subtype_indicator(state) {
+	var subtype_indicator = $("#is-subtype")
+	subtype_indicator.removeClass("text-danger text-success")
+	if (state == -1) { // not subtype
+		subtype_indicator.html("≮:").addClass("text-danger")
+	} else if (state == 0) { // not sure
+		subtype_indicator.html("⩻:")
+	} else if (state == 1) { // subtype
+		subtype_indicator.html("<:").addClass("text-success")
+	}
+}
+
+function checkSubtype(el) {
+	var lhs = $("#lhs")[0].value
+	var rhs = $("#rhs")[0].value
+	var result = subtyper.check(lhs, rhs)
+	var lhs_ast = JSON.parse(subtyper.getast(lhs))
+	var rhs_ast = JSON.parse(subtyper.getast(rhs))
+	$(".result").remove()
+	if (result.result) {
+		result.evidence.reverse().map(e => render_success_case(e, lhs_ast, rhs_ast))
+		set_subtype_indicator(1)
+	} else {
+		result.evidence.passing.reverse().map(e => render_success_case(e, lhs_ast, rhs_ast))
+		render_failure_case(result.evidence.failing, lhs_ast, rhs_ast)
+		set_subtype_indicator(-1)
+	}
+} 
+
+// WARNING: WILL DESTROY choice
+// copy and reverse choice before passing it to this
+function annotate_type(typ, choice) {
+	if (typ.head == "atom") {
+		return {head: "atom", body: [typ.body], sel:true}
+	}
+	if (typ.head == "tuple1") {
+		return {head: "tuple1", body: [annotate_type(typ.body[0], choice)], sel:true}
+	}
+	if (typ.head == "tuple2") {
+		return {head: "tuple2", 
+	     		body: [annotate_type(typ.body[0], choice), annotate_type(typ.body[1], choice)], 
+	     		sel: true}
+	}
+	if (choice.length == 0) return typ;
+	if (typ.head == "union") {
+		var dir = choice.pop()
+		var lbody = dir ? typ.body[0] : annotate_type(typ.body[0], choice)
+		var rbody = dir ? annotate_type(typ.body[1], choice) : typ.body[1]
+		return {head: "union", 
+	     		body: [lbody, rbody], 
+	     		sel: true}
+	}
+}
+
+function render_type_tree(elem, ast, choice) {
+	if (choice != undefined) {
+		var ichoice = choice.slice().reverse()
+		ast = annotate_type(ast, ichoice)
+	}
+
+	var nel = $("<svg viewBox=\"0 0 150 150\" style=\"width:150px; height:150px\"></svg>")
+	elem.append(nel[0])
+
+	var svg = d3.select(nel[0])
+	var vs = d3.scaleLinear().domain([0,1]).range([20,130])
+	var heirarchy = d3.hierarchy(ast, el=> el.head == "atom" ? [] : el.body)
+	d3.tree(heirarchy).separation(e => 10)(heirarchy)
+	var rx = heirarchy.x
+	var hs = d3.scaleLinear().domain([-1+rx,1+rx]).range([-80,240])
+
+	var root = svg.append("g")
+			.attr("font-family", "sans-serif")
+			.attr("font-size", 19)
+
+	var link_data = heirarchy.links()
+	var links = root.append("g")
+			.attr("fill", "none")
+			.attr("stroke", "#555")
+			.attr("stroke-opacity", 0.4)
+			.attr("stroke-width", 1.5)
+			.selectAll("path")
+			.data(link_data)
+			.join("path")
+			.attr("d", function (els) {
+				return d3.line().x(e => hs(e.x)).y(e => vs(e.y)).curve(d3.curveLinear)([els.source,els.target])
+			})
+
+	var nodes = root.append("g")
+    		.attr("stroke-linejoin", "round")
+    		.attr("stroke-width", 3)
+    		.selectAll("g")
+    		.data(heirarchy.descendants())
+    		.join("g")
+    		.attr("transform", d => `translate(${hs(d.x)}, ${vs(d.y)})`)
+    var boxes = nodes.append("rect")
+    		.attr("fill", function (d) {return d.data.sel != undefined ? "#090" : "#999"})
+    		.attr("transform", d => `translate(${-48/2}, ${-42/2})`)
+    		.attr("width", "48px")
+    		.attr("height", "1.35em")
+
+    var text = nodes.append("text")
+    		.text(d => d.data.head == "atom" ? d.data.body[0] : d.data.head)
+    		.attr("text-anchor", "middle")
+    		.clone(true).lower()
+	return heirarchy
+}
+
+$(".type-entry").on("input", x => validateTypeEntry(x.target))
+$("#check-sub").on("click", checkSubtype)
+$(".example").on("click", tryExample)
+</script>
+</body>
+</html>
