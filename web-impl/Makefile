@@ -3,4 +3,4 @@ default:
 	cp _build/subtype.js ./js/
 
 deps: 
-	opam install menhir js_of_ocaml js_of_ocaml-compiler js_of_ocaml-lwt js_of_ocaml-ppx js_of_ocaml-ocamlbuild
+	opam install ocamlbuild menhir js_of_ocaml js_of_ocaml-compiler js_of_ocaml-lwt js_of_ocaml-ppx js_of_ocaml-ocamlbuild
